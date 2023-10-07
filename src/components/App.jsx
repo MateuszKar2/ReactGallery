@@ -1,149 +1,113 @@
-import React, { Component } from 'react';
-import { Searchbar } from './Searchbar/Searchbar';
-import { ImageGallery } from './ImageGallery/ImageGallery';
-import { Modal } from './Modal/Modal';
-import { Loader } from './Loader/Loader';
-import { Button } from './Button/Button';
-import { fetchData } from 'services/api';
+import React, { useState, useEffect } from 'react';
+import { getSearch } from 'api/getSearch';
+import { Toaster } from 'react-hot-toast';
+import { Button } from 'components/Button/Button';
+import { ImageGallery } from 'components/ImageGallery/ImageGallery';
+import { Loader } from 'components/Loader/Loader';
+import { Modal } from 'components/Modal/Modal'; 
 
-export class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      gallery: [],
-      hits: 0,
-      modalIndex: '-1',
-      loading: false,
-      loadingMore: false,
-      query: 'wolves',
-      page: 0,
-      scroll: 0,
-    };
-  }
-  clearGallery = () => {
-    this.setState({ error: '', page: 0, hits: 0, gallery: [] });
-  };
-  stateUpdate = (key, value) => {
-    this.setState({ [key]: value });
-  };
-  convertResponseIntoGallery = response => {
-    if (!response.data.hits) return [];
-    return response.data.hits.map(hit => ({
-      id: hit.id,
-      miniature: hit.webformatURL,
-      url: hit.largeImageURL,
-      tags: hit.tags,
-    }));
-  };
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.page !== prevState.page ||
-      this.state.query !== prevState.query
-    ) {
-      try {
-        this.fetchGallery();
-      } finally {
-        if (this.state.page > 1) {
-          window.scrollTo(0, this.state.scroll);
+import { Searchbar } from 'components/SearchBar/SearchBar';
+
+export const App = () => {
+  const [search, setSearch] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [empty, setEmpty] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [alt, setAlt] = useState('');
+
+  useEffect(() => {
+    if (search !== '' || page !== 1) {
+      getFunc(search, page);
+    }
+  }, [search, page]);
+
+  const getFunc = (text, page) => {
+    setLoading(true);
+
+    getSearch(text, page)
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.hits.length === 0) {
+          setEmpty(true);
         }
-      }
-    }
-  }
-  saveScrollPosition = () => {
-    const y = Math.floor(
-      document.documentElement.scrollTop || document.body.scrollTop
-    );
-    this.setState({ scroll: y });
+        setImages(prevImages => [...prevImages, ...data.hits]);
+        setTotal(data.total);
+      })
+      .catch(error => {
+        console.error('Błąd w żądaniu API:', error);
+        setError(error.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
-  async componentDidMount() {
-    await this.newGallery();
-  }
+  const clickLoad = () => {
+    setPage(prevPage => prevPage + 1);
+  };
 
-  componentDidCatch(error) {
-    console.log(error);
-    this.setState({ error: error, loading: false });
-  }
-  async fetchGallery() {
-    const response = await fetchData(
-      this.state.query,
-      this.state.page,
-      this.componentDidCatch.bind(this)
-    );
-    this.setState(prev => {
-      return {
-        response: response,
-        loadingMore: false,
-        loading: false,
-        gallery: [
-          ...prev.gallery,
-          ...this.convertResponseIntoGallery(response),
-        ],
-        hits: Number(response.data.totalHits),
-      };
-    });
-    return true;
-  }
-  async newGallery() {
-    this.clearGallery();
-    try {
-      await this.setState(prev => {
-        return { loading: true, page: 1 };
-      });
-    } finally {
-      return true;
-    }
-  }
-  async loadMoreGallery() {
-    this.saveScrollPosition();
-    await this.setState(prev => {
-      return { loadingMore: true, page: 1 + Number(prev.page) };
-    });
-    return true;
-  }
+  const openModal = (largeImageURL, alt) => {
+    setShowModal(true);
+    setLargeImageURL(largeImageURL);
+    setAlt(alt);
+  };
 
-  render() {
-    return (
-      <div className="App">
-        {this.state.loading ? <Loader /> : ''}
-        <Searchbar
-          query={this.state.query}
-          stateUpdate={this.stateUpdate.bind(this)}
-          searchHandle={this.newGallery.bind(this)}
-        />
-        {Number(this.state.modalIndex) > -1 ? (
-          <Modal
-            {...this.state.gallery[this.state.modalIndex]}
-            stateUpdate={this.stateUpdate.bind(this)}
-          />
-        ) : (
-          ''
-        )}
-        {!this.state.loading && this.state.gallery.length > 0 ? (
-          <ImageGallery
-            gallery={this.state.gallery}
-            stateUpdate={this.stateUpdate.bind(this)}
-          />
-        ) : this.state.error ? (
-          ''
-        ) : (
-          <span className="Message">No search results.</span>
-        )}
-        {this.state.error ? (
-          <span className="Message">{this.state.error.message}</span>
-        ) : (
-          ''
-        )}
-        {this.state.hits > Math.max(0, this.state.gallery.length) ? (
-          this.state.loadingMore ? (
-            <Loader small={true} />
-          ) : (
-            <Button txt="Load more" onClick={this.loadMoreGallery.bind(this)} />
-          )
-        ) : (
-          ''
-        )}
-      </div>
-    );
-  }
-}
+  const handleSubmit = search => {
+    setSearch(search);
+    setImages([]);
+    setPage(1);
+    setTotal(1);
+    setLoading(false);
+    setError(null);
+    setEmpty(false);
+  };
+
+  const onCloseModal = () => {
+    setShowModal(false);
+    setLargeImageURL('');
+    setAlt('');
+  };
+
+  return (
+    <div>
+      <Toaster
+        toastOptions={{
+          duration: 1500,
+        }}
+      />
+
+      <Searchbar handleSubmit={handleSubmit} />
+
+      {error && (
+        <h2 style={{ textAlign: 'center' }}>
+          Something went wrong: ({error})!
+        </h2>
+      )}
+
+      <ImageGallery toggleModal={openModal} images={images} />
+
+      {loading && <Loader />}
+
+      {empty && (
+        <h2 style={{ textAlign: 'center' }}>Sorry. There are no images ...</h2>
+      )}
+
+      {total / 12 > page && <Button clickLoad={clickLoad} />}
+
+      {showModal && (
+        <Modal
+          onCloseModal={onCloseModal} 
+          largeImageURL={largeImageURL}
+          alt={alt}
+        >
+          <img src={largeImageURL} alt={alt} />
+        </Modal>
+      )}
+    </div>
+  );
+};
