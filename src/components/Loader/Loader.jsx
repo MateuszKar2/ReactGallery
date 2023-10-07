@@ -1,26 +1,20 @@
-import css from "./Loader.module.css";
-import { PropTypes } from 'prop-types';
+import React from 'react';
+import { Oval } from 'react-loader-spinner';
+import css from './Loader.module.css';
 
-export const Loader = ({ small = false }) => {
-    return (
-        <>
-        {small === true ? (
-            <div className={`${css.spinner} ${css.small}`}>
-                <div className={`${css.head} ${css.small}`}></div>
-            </div>
-        ) : (
-            <div className={css.overlay}>
-          <div className={css.loader}>
-            <div className={css.spinner}>
-              <div className={css.head}> </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+export const Loader = () => {
+  return (
+    <div className={css.loaderContainer}>
+      <Oval
+        visible={true}
+        ariaLabel="loading-indicator"
+        height={100}
+        width={100}
+        strokeWidth={1}
+        strokeWidthSecondary={2000}
+        color="blue"
+        secondaryColor="red"
+      />
+    </div>
   );
-};
-
-Loader.propTypes = {
-  small: PropTypes.bool,
 };
