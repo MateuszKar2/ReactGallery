@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import css from './App.module.css';
 import searchImages from 'services/pixabay';
-import Searchbar from './Searchbar/Searchbar';
+import Searchbar from './SearchBar/SearchBar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import ImageGalleryItem from './ImageGalleryItem/ImageGalleryItem';
 import Loader from './Loader/Loader';
