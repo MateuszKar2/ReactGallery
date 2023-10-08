@@ -1,29 +1,22 @@
 import css from './ImageGalleryItem.module.css';
 import PropTypes from 'prop-types';
 
-export const ImageGalleryItem = ({ images, toggleModal }) => {
+export const ImageGalleryItem = ({ images, onClick }) => {
   return (
-    <>
-      {images.map(item => (
-        <li
-          key={item.id}
-          onClick={() => {
-            toggleModal(item.largeImageURL, item.tags);
-          }}
-          className={css.galleryItem}
-        >
+      images.map(image => (
+        <li key={image.id} className={css.galleryItem}>
           <img
-            loading="lazy"
-            className={css.ImageGalleryItem}
-            src={item.webformatURL}
-            alt={item.tags}
-          />
+            className={css.galleryItemImage}
+            src={image.webformatURL}
+            alt={image.type}
+            data-src={image.largeImageURL}
+            onClick={onClick}/>
         </li>
-      ))}
-    </>
-  );
+      ))
+    );
 };
 
 ImageGalleryItem.propTypes = {
-  images: PropTypes.arrayOf(PropTypes.object).isRequired,
+  images: PropTypes.array.isRequired,
+  onClick: PropTypes.func.isRequired,
 };

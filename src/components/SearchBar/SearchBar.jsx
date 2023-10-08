@@ -1,42 +1,35 @@
-import React, { useState } from 'react';
-import { toast } from 'react-hot-toast';
-import { MdImageSearch } from 'react-icons/md';
+import { useState } from 'react';
+import { PropTypes } from 'prop-types';
 import css from './SearchBar.module.css';
 
 export const Searchbar = ({ handleSubmit }) => {
-  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
 
-  const onChangeInput = e => {
-    const value = e.currentTarget.value;
-    setSearch(value);
-  };
-
-  const resetForm = () => {
-    setSearch('');
+  const onInputChange = e => {
+    setQuery(e.target.value.trim())
   };
 
   const onSubmitForm = e => {
     e.preventDefault();
-
-    if (!search) {
-      return toast.error('Enter text for search.');
+    if (query.length === 0) {
+      alert("Pole wyszukiwania nie może byc puste")
+    } else {
+      onSubmitInput(query);
+      setQuery('');
     }
-
-    handleSubmit(search);
-    resetForm();
   };
 
   return (
-    <header className={css.SearchBar}>
-      <form onSubmit={onSubmitForm} className={css.Form}>
-        <button type="submit" className={css.Button}>
-          <MdImageSearch size="30" />
+    <header className={css.searchBar}>
+      <form onSubmit={onSubmitForm} className={css.form}>
+        <button type="submit" className={css.button}>
+          <span className={css.buttonLabel}>Search</span>
         </button>
 
         <input
           value={search}
-          onChange={onChangeInput}
-          className={css.Input}
+          onChange={onInputChange}
+          className={css.input}
           autoFocus
           name="search"
           type="text"
@@ -46,4 +39,8 @@ export const Searchbar = ({ handleSubmit }) => {
       </form>
     </header>
   );
+};
+
+Searchbar.propTypes = {
+  onSubmitInput: PropTypes.func.isRequired,
 };

@@ -1,32 +1,34 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import css from './Modal.module.css';
+import PropTypes from '.prop-types';
 
-export const Modal = ({ onCloseModal, largeImageURL, alt }) => {
+export const Modal = ({ closeModalByEscape, closeModalByOverlay, src, alt }) => {
   useEffect(() => {
-    const keyDown = evt => {
-      if (evt.code === 'Escape') {
-        onCloseModal();
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeModalByEscape();
       }
     };
 
-    window.addEventListener('keydown', keyDown);
-
-    return () => {
-      window.removeEventListener('keydown', keyDown);
-    };
-  }, [onCloseModal]);
-
-  const handleClose = evt => {
-    if (evt.currentTarget === evt.target) {
-      onCloseModal();
+    document.addEventListener('keydown', handleKeyDown);
+    return() => {
+      document.removeEventListener('keydown', handleKeyDown);
     }
-  };
+  }, [closeModalByEscape]);
 
-  return (
-    <div onClick={handleClose} className={css.Overlay}>
-      <div className={css.Modal}>
-        <img src={largeImageURL} alt={alt} />
+
+  return(
+    <div className={css.overlay} onClick={closeModalByOverlay}>
+      <div className={css.modal}>
+        <img src={src} alt={alt}/>
       </div>
     </div>
-  );
+  )
 };
+
+Modal.propTypes = {
+  src: PropTypes.string.isRequired,
+  alt: PropTypes.string.isRequired,
+  closeModalByEscape: PropTypes.func.isRequired,
+  closeModalByOverlay: PropTypes.func.isRequired,
+}
