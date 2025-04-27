@@ -1,4 +1,4 @@
-# 📸 ReactGallery
+ # 📸 ReactGallery
 
 **ReactGallery** is a React-based application that allows users to search and browse images using the Pixabay API. Enter a keyword, and the app will display a gallery of matching images. Click an image to view it in a larger modal window.
 
